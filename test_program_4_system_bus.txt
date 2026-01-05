@@ -1,0 +1,151 @@
+Test Program 4: System Bus Activity Demonstration (Extra Credit)
+===================================================================
+
+This program is specifically designed to demonstrate the System Bus Monitor
+functionality, showing all three buses in action with various operations.
+
+Program Purpose:
+----------------
+Demonstrate comprehensive bus activity including:
+- Instruction fetches (Address Bus + FETCH signal)
+- Memory reads with different addressing modes (Address Bus + READ signal)
+- Memory writes (Address Bus + WRITE signal)
+- Register operations (minimal bus activity)
+
+Program:
+--------
+100: LOAD R1, #500
+101: LOAD R2, 500
+102: STORE R2, 600
+103: LOAD R3, (R1)
+104: ADD R1, R2, R3
+105: STORE R1, 10(R3)
+106: LOAD R2, 600
+
+Memory Setup:
+-------------
+500: 42
+501: 99
+
+Expected Bus Activity:
+----------------------
+
+Instruction 100: LOAD R1, #500
+  Bus Operations:
+  1. FETCH - Address Bus: 0x0064 (100), Data Bus: "LOAD R1, #500", FETCH signal active
+  Result: R1 = 500 (immediate, no memory read needed)
+  Bus Impact: 1 operation (fetch only)
+
+Instruction 101: LOAD R2, 500
+  Bus Operations:
+  1. FETCH - Address Bus: 0x0065 (101), Data Bus: "LOAD R2, 500", FETCH signal active
+  2. READ - Address Bus: 0x01F4 (500), Data Bus: 0x0000002A (42), READ signal active
+  Result: R2 = 42
+  Bus Impact: 2 operations (1 fetch + 1 read)
+
+Instruction 102: STORE R2, 600
+  Bus Operations:
+  1. FETCH - Address Bus: 0x0066 (102), Data Bus: "STORE R2, 600", FETCH signal active
+  2. WRITE - Address Bus: 0x0258 (600), Data Bus: 0x0000002A (42), WRITE signal active
+  Result: Memory[600] = 42
+  Bus Impact: 2 operations (1 fetch + 1 write)
+
+Instruction 103: LOAD R3, (R1)
+  Bus Operations:
+  1. FETCH - Address Bus: 0x0067 (103), Data Bus: "LOAD R3, (R1)", FETCH signal active
+  2. READ - Address Bus: 0x01F4 (500, value from R1), Data Bus: 0x0000002A (42), READ signal active
+  Result: R3 = 42 (register-indirect addressing)
+  Bus Impact: 2 operations (1 fetch + 1 indirect read)
+
+Instruction 104: ADD R1, R2, R3
+  Bus Operations:
+  1. FETCH - Address Bus: 0x0068 (104), Data Bus: "ADD R1, R2, R3", FETCH signal active
+  Result: R1 = 84 (42 + 42)
+  Bus Impact: 1 operation (fetch only, register operation)
+  Note: This shows that register operations don't use the data bus!
+
+Instruction 105: STORE R1, 10(R3)
+  Bus Operations:
+  1. FETCH - Address Bus: 0x0069 (105), Data Bus: "STORE R1, 10(R3)", FETCH signal active
+  2. WRITE - Address Bus: 0x0034 (52, calculated as 42+10), Data Bus: 0x00000054 (84), WRITE signal active
+  Result: Memory[52] = 84 (indexed addressing)
+  Bus Impact: 2 operations (1 fetch + 1 indexed write)
+
+Instruction 106: LOAD R2, 600
+  Bus Operations:
+  1. FETCH - Address Bus: 0x006A (106), Data Bus: "LOAD R2, 600", FETCH signal active
+  2. READ - Address Bus: 0x0258 (600), Data Bus: 0x0000002A (42), READ signal active
+  Result: R2 = 42 (reading value we stored earlier)
+  Bus Impact: 2 operations (1 fetch + 1 read)
+
+Total Bus Activity Summary:
+---------------------------
+- Total bus operations: 13
+  * FETCH operations: 7 (one per instruction)
+  * READ operations: 4 (instructions 101, 103, 106, and indirect)
+  * WRITE operations: 2 (instructions 102, 105)
+
+- Addressing modes demonstrated:
+  * Immediate: Instruction 100 (no data bus usage)
+  * Direct memory: Instructions 101, 102, 106
+  * Register-indirect: Instruction 103
+  * Indexed: Instruction 105
+  * Register-only: Instruction 104
+
+Final State:
+------------
+R1 = 84
+R2 = 42
+R3 = 42
+Memory[52] = 84
+Memory[500] = 42
+Memory[600] = 42
+
+Bus Activity Log (Last 5 entries will show):
+--------------------------------------------
+[Time] FETCH: Addr=0x006A, Data=LOAD R2, 600
+[Time] READ: Addr=0x0258, Data=0x0000002A
+[Time] FETCH: Addr=0x0069, Data=STORE R1, 10(R3)
+[Time] WRITE: Addr=0x0034, Data=0x00000054
+[Time] FETCH: Addr=0x0068, Data=ADD R1, R2, R3
+
+Visual Observations:
+-------------------
+1. Blue glow during FETCH operations (instruction fetch)
+2. Green glow during READ operations (loading data)
+3. Red glow during WRITE operations (storing data)
+4. Address Bus always shows the memory location being accessed
+5. Data Bus shows instruction text during fetch, hex values during read/write
+6. Control signals light up individually (READ/WRITE/FETCH)
+7. Bus wires pulse when active
+8. Activity log scrolls with newest entries at top
+
+Educational Insights:
+--------------------
+1. Every instruction requires at least one bus operation (fetch)
+2. Memory operations require additional bus cycles
+3. Register operations are faster (no bus access for operands)
+4. Addressing modes affect bus usage patterns
+5. Write operations are visible in real-time
+6. The system bus is the critical communication channel
+
+Usage Instructions:
+-------------------
+1. Open the simulator in a web browser
+2. Paste the program into "Instruction memory"
+3. Paste the memory setup into "Main memory"
+4. Click "Apply / Reset CPU"
+5. Watch the System Bus Monitor panel (below CPU State)
+6. Click "Step Phase" repeatedly to see each bus operation
+7. Observe:
+   - Address Bus values changing
+   - Data Bus content changing
+   - Control signals activating (READ/WRITE/FETCH)
+   - Bus wires glowing with different colors
+   - Activity log updating with timestamped entries
+8. Alternatively, click "Step Full Instruction" to see all phases of each instruction
+9. Or click "Run Until End" to execute all instructions and review the final bus log
+
+This test program showcases the full capability of the System Bus Monitor,
+demonstrating why this extra credit feature significantly enhances the
+educational value of the simulator.

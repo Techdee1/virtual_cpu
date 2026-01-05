@@ -1,4 +1,3 @@
-.
 <!DOCTYPE html>
 <html lang="en">
 
@@ -279,9 +278,133 @@
       margin-top: .2rem;
     }
 
+    /* System Bus Styles (Extra Credit) */
+    .bus-container {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      margin-top: .4rem;
+    }
+
+    .bus-line {
+      display: grid;
+      grid-template-columns: 100px 1fr 80px;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .bus-label {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-align: right;
+    }
+
+    .bus-wire {
+      position: relative;
+      height: 36px;
+      background: linear-gradient(to right, #1e293b 0%, #0f172a 50%, #1e293b 100%);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .bus-wire.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+      animation: pulse 0.6s ease-in-out;
+    }
+
+    .bus-wire.read-op {
+      border-color: #4ade80;
+      background: linear-gradient(to right, rgba(74, 222, 128, 0.1) 0%, rgba(74, 222, 128, 0.05) 100%);
+    }
+
+    .bus-wire.write-op {
+      border-color: #f87171;
+      background: linear-gradient(to right, rgba(248, 113, 113, 0.1) 0%, rgba(248, 113, 113, 0.05) 100%);
+    }
+
+    .bus-wire.fetch-op {
+      border-color: #60a5fa;
+      background: linear-gradient(to right, rgba(96, 165, 250, 0.1) 0%, rgba(96, 165, 250, 0.05) 100%);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .bus-value {
+      font-family: var(--mono);
+      font-size: .85rem;
+      color: var(--text);
+      font-weight: 600;
+      padding: .2rem .6rem;
+      background: rgba(56, 189, 248, 0.1);
+      border-radius: 4px;
+    }
+
+    .bus-width {
+      font-size: .7rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .bus-signals {
+      display: flex;
+      gap: .3rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .signal {
+      font-size: .7rem;
+      padding: .2rem .5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.9);
+      font-family: var(--mono);
+      transition: all 0.3s ease;
+    }
+
+    .signal.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .signal.active.read {
+      border-color: #4ade80;
+      background: rgba(74, 222, 128, 0.15);
+      color: #4ade80;
+    }
+
+    .signal.active.write {
+      border-color: #f87171;
+      background: rgba(248, 113, 113, 0.15);
+      color: #f87171;
+    }
+
+    .signal.active.fetch {
+      border-color: #60a5fa;
+      background: rgba(96, 165, 250, 0.15);
+      color: #60a5fa;
+    }
+
     @media (max-width: 900px) {
       .app {
         grid-template-columns: 1fr;
+      }
+
+      .bus-line {
+        grid-template-columns: 80px 1fr 60px;
       }
     }
   </style>
@@ -420,6 +543,52 @@
       </div>
     </div>
 
+    <!-- SYSTEM BUS DISPLAY (Extra Credit) -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2>System Bus Monitor</h2>
+          <h3>Real-time bus activity visualization</h3>
+        </div>
+        <span class="badge" style="background: linear-gradient(120deg, #f59e0b, #ef4444); color: #000;">Extra Credit</span>
+      </div>
+
+      <div class="bus-container">
+        <div class="bus-line">
+          <div class="bus-label">Address Bus</div>
+          <div class="bus-wire" id="addressBusWire">
+            <div class="bus-value" id="addressBusValue">—</div>
+          </div>
+          <div class="bus-width">16-bit</div>
+        </div>
+        <div class="bus-line">
+          <div class="bus-label">Data Bus</div>
+          <div class="bus-wire" id="dataBusWire">
+            <div class="bus-value" id="dataBusValue">—</div>
+          </div>
+          <div class="bus-width">32-bit</div>
+        </div>
+        <div class="bus-line">
+          <div class="bus-label">Control Bus</div>
+          <div class="bus-wire" id="controlBusWire">
+            <div class="bus-signals" id="controlBusSignals">
+              <span class="signal" id="signalRead">READ</span>
+              <span class="signal" id="signalWrite">WRITE</span>
+              <span class="signal" id="signalFetch">FETCH</span>
+            </div>
+          </div>
+          <div class="bus-width">Control</div>
+        </div>
+      </div>
+
+      <div style="margin-top: .6rem;">
+        <label style="font-size: .8rem; color: var(--muted);">Bus Activity Log (last 5 operations)</label>
+        <div id="busActivityLog" style="max-height: 100px; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); padding: .4rem; font-size: .75rem; font-family: var(--mono); background: rgba(15, 23, 42, .9); margin-top: .2rem;">
+          <div style="color: var(--muted);">Waiting for CPU operations...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- BOTTOM: visual memory + program view -->
     <div class="card" style="grid-column: 1 / -1;">
       <div class="card-header">
@@ -503,6 +672,19 @@
     const runBtn = document.getElementById("runBtn");
 
     const phaseChips = document.querySelectorAll("[data-phase-chip]");
+
+    // System Bus elements (Extra Credit)
+    const addressBusWire = document.getElementById("addressBusWire");
+    const addressBusValue = document.getElementById("addressBusValue");
+    const dataBusWire = document.getElementById("dataBusWire");
+    const dataBusValue = document.getElementById("dataBusValue");
+    const controlBusWire = document.getElementById("controlBusWire");
+    const signalRead = document.getElementById("signalRead");
+    const signalWrite = document.getElementById("signalWrite");
+    const signalFetch = document.getElementById("signalFetch");
+    const busActivityLog = document.getElementById("busActivityLog");
+
+    let busLog = [];
 
     // --- Helpers ---
     function parseIntOrNull(str) {
@@ -600,7 +782,8 @@
         Z: false
       };
 
-
+      busLog = [];
+      clearBus();
       updateViews("CPU reset from editors.");
     }
 
@@ -627,11 +810,14 @@
     }
 
     function readMemory(addr) {
-      return state.memory[addr] ?? 0;
+      const value = state.memory[addr] ?? 0;
+      updateBus(addr, value, "read");
+      return value;
     }
 
     function writeMemory(addr, value) {
       state.memory[addr] = value;
+      updateBus(addr, value, "write");
     }
 
     function setPhaseChipActive(phase) {
@@ -639,6 +825,62 @@
         const p = ch.getAttribute("data-phase-chip");
         ch.classList.toggle("active", p === phase);
       });
+    }
+
+    // System Bus Functions (Extra Credit)
+    function updateBus(address, data, operation) {
+      // Update address bus
+      addressBusValue.textContent = address !== null ? `0x${address.toString(16).toUpperCase().padStart(4, '0')}` : "—";
+      addressBusWire.className = "bus-wire";
+      if (address !== null) {
+        addressBusWire.classList.add("active", `${operation}-op`);
+      }
+
+      // Update data bus
+      dataBusValue.textContent = data !== null && data !== undefined ? `0x${(data >>> 0).toString(16).toUpperCase().padStart(8, '0')}` : "—";
+      dataBusWire.className = "bus-wire";
+      if (data !== null && data !== undefined) {
+        dataBusWire.classList.add("active", `${operation}-op`);
+      }
+
+      // Update control signals
+      signalRead.className = "signal";
+      signalWrite.className = "signal";
+      signalFetch.className = "signal";
+
+      if (operation === "read") {
+        signalRead.classList.add("active", "read");
+        controlBusWire.classList.add("active", "read-op");
+      } else if (operation === "write") {
+        signalWrite.classList.add("active", "write");
+        controlBusWire.classList.add("active", "write-op");
+      } else if (operation === "fetch") {
+        signalFetch.classList.add("active", "fetch");
+        controlBusWire.classList.add("active", "fetch-op");
+      }
+
+      // Add to activity log
+      const timestamp = new Date().toLocaleTimeString();
+      const dataStr = data !== null && data !== undefined ? `0x${(data >>> 0).toString(16).toUpperCase()}` : "—";
+      const logEntry = `[${timestamp}] ${operation.toUpperCase()}: Addr=0x${address !== null ? address.toString(16).toUpperCase() : '—'}, Data=${dataStr}`;
+      
+      busLog.unshift(logEntry);
+      if (busLog.length > 5) busLog.pop();
+      
+      busActivityLog.innerHTML = busLog.map((entry, idx) => 
+        `<div style="color: ${idx === 0 ? 'var(--accent)' : 'var(--text)'}; padding: .15rem 0;">${entry}</div>`
+      ).join("");
+    }
+
+    function clearBus() {
+      addressBusValue.textContent = "—";
+      dataBusValue.textContent = "—";
+      addressBusWire.className = "bus-wire";
+      dataBusWire.className = "bus-wire";
+      controlBusWire.className = "bus-wire";
+      signalRead.className = "signal";
+      signalWrite.className = "signal";
+      signalFetch.className = "signal";
     }
 
     function updateTables() {
@@ -725,6 +967,8 @@
         updateViews(`No instruction at address ${state.registers.PC}. CPU halted.`);
         return;
       }
+      // Update system bus for instruction fetch
+      updateBus(state.registers.PC, inst.text, "fetch");
       state.registers.IR = inst.op + " " + inst.args.join(", ");
       state.phase = "decode";
       const msg =
