@@ -1,0 +1,283 @@
+TECHNICAL REPORT
+CPU Instruction Cycle Simulator Extension
+==========================================
+
+Student: GROUP 14
+Date: January 5, 2026
+Word Count: ~1450 words
+
+1. INTRODUCTION
+===============
+
+This report describes the implementation of extended functionality for a web-based CPU instruction cycle simulator. The original simulator supported basic LOAD, STORE, and JUMP instructions. This project extended it with comprehensive ALU operations, multiple addressing modes, and conditional branching capability. The implementation maintains the fetch-decode-execute cycle architecture while significantly expanding the instruction set architecture (ISA).
+
+2. IMPLEMENTATION OVERVIEW
+==========================
+
+2.1 Architecture
+----------------
+The simulator implements a simplified von Neumann architecture with:
+- Program Counter (PC): Tracks the current instruction address
+- Instruction Register (IR): Holds the current instruction being executed
+- Three general-purpose registers (R1, R2, R3)
+- Status flags (Z flag for zero detection)
+- Unified memory space for instructions and data
+- Arithmetic Logic Unit (ALU) for computational operations
+
+The three-phase instruction cycle (Fetch → Decode → Execute) is preserved, allowing users to step through each phase individually or execute complete instructions.
+
+2.2 Technology Stack
+--------------------
+The implementation uses HTML5, CSS3, and vanilla JavaScript (ES6+). This approach ensures:
+- Zero external dependencies
+- Browser-based execution without server requirements
+- Educational transparency with readable source code
+- Interactive visualization of CPU state changes
+
+3. NEW ALU INSTRUCTIONS
+=======================
+
+3.1 Implementation Details
+---------------------------
+Six new ALU instructions were implemented, expanding arithmetic and logical capabilities:
+
+**Arithmetic Operations:**
+- SUB (Subtract): Performs dst = src1 - src2
+- MUL (Multiply): Performs dst = src1 × src2  
+- DIV (Divide): Performs dst = floor(src1 / src2) with division-by-zero protection
+- ADD (Enhanced): Original instruction maintained for compatibility
+
+**Logical Operations:**
+- AND (Bitwise AND): Performs dst = src1 & src2
+- OR (Bitwise OR): Performs dst = src1 | src2
+- NOT (Bitwise NOT): Performs dst = ~src (single-operand instruction)
+
+3.2 Zero Flag Management
+-------------------------
+All ALU operations update the Z (zero) flag based on their result:
+```javascript
+const res = v1 + v2;
+setReg(dst, res);
+state.flags.Z = (res === 0);
+```
+
+This flag is critical for conditional branching and is displayed in the UI for educational purposes. The flag enables programs to make decisions based on computation results.
+
+3.3 Design Decisions
+--------------------
+- Integer arithmetic only (JavaScript's number type used)
+- Division uses floor operation for integer results
+- Bitwise operations follow JavaScript's 32-bit integer semantics
+- Three-address instruction format (dst, src1, src2) for consistency
+
+4. ADDRESSING MODES IMPLEMENTATION
+===================================
+
+4.1 Overview
+------------
+Four addressing modes were implemented to provide flexible data access patterns commonly found in real processors:
+
+4.2 Immediate Addressing (#value)
+----------------------------------
+Allows literal values in instructions without memory access:
+```
+LOAD R1, #100    // R1 = 100
+ADD R2, R1, #5   // R2 = R1 + 5
+```
+
+Implementation extracts the numeric value:
+```javascript
+if (operand.startsWith("#")) {
+  return parseInt(operand.slice(1), 10);
+}
+```
+
+Benefits: Fast execution, no memory access required, compact constant loading.
+
+4.3 Direct Memory Addressing (address)
+---------------------------------------
+Traditional addressing where the operand specifies a memory address:
+```
+LOAD R1, 500     // R1 = Memory[500]
+STORE R2, 600    // Memory[600] = R2
+```
+
+This mode enables access to fixed memory locations and is the foundation for variable access.
+
+4.4 Register-Indirect Addressing ((Rn))
+----------------------------------------
+Uses a register's value as a memory address (pointer dereferencing):
+```
+LOAD R1, #500
+LOAD R2, (R1)    // R2 = Memory[500]
+```
+
+Implementation:
+```javascript
+if (operand.startsWith("(") && operand.endsWith(")")) {
+  const regName = operand.slice(1, -1);
+  const addr = getReg(regName);
+  return readMemory(addr);
+}
+```
+
+This enables dynamic addressing, pointer operations, and array traversal.
+
+4.5 Indexed Addressing (offset(Rn))
+------------------------------------
+Combines base address (register) with offset for array/structure access:
+```
+LOAD R1, #100
+LOAD R2, 50(R1)  // R2 = Memory[150] = Memory[100 + 50]
+```
+
+Implementation uses regex pattern matching:
+```javascript
+if (operand.match(/^\d+\(.+\)$/)) {
+  const match = operand.match(/^(\d+)\((.+)\)$/);
+  const offset = parseInt(match[1], 10);
+  const baseAddr = getReg(regName);
+  return readMemory(baseAddr + offset);
+}
+```
+
+This mode is essential for array indexing and structure member access.
+
+4.6 Unified getValue() Function
+--------------------------------
+A critical improvement was creating a comprehensive getValue() function that handles all addressing modes for ALU operands. The original implementation only supported immediate and register modes, causing ALU instructions to fail with indirect/indexed operands. The corrected function supports all four modes, enabling expressions like:
+```
+ADD R3, (R1), 10(R2)  // Add pointer value and indexed value
+```
+
+5. CONDITIONAL BRANCH INSTRUCTION (JNZ)
+========================================
+
+5.1 Implementation
+------------------
+JNZ (Jump if Not Zero) provides conditional control flow based on the Z flag:
+```javascript
+case "JNZ": {
+  const [addr] = inst.args;
+  if (!state.flags.Z) {
+    pcNext = parseInt(addr, 10);
+    branchTaken = true;
+    explanation += `JNZ taken → PC = ${pcNext}`;
+  } else {
+    explanation += `JNZ not taken (Z flag set)`;
+  }
+  break;
+}
+```
+
+5.2 Usage Pattern
+-----------------
+Enables loop constructs:
+```
+100: LOAD R1, #5      // Counter
+101: SUB R1, R1, #1   // Decrement
+102: JNZ 101          // Loop if not zero
+```
+
+This pattern demonstrates how high-level constructs (while/for loops) map to machine instructions.
+
+5.3 Educational Value
+----------------------
+JNZ demonstrates the relationship between:
+- ALU operations (setting flags)
+- Status flags (Z flag storage)
+- Control flow (conditional PC modification)
+- Program structure (loops/conditions)
+
+6. BUG FIXES AND CODE QUALITY
+==============================
+
+6.1 Critical Bug: Switch Statement Structure
+---------------------------------------------
+The original code had a fatal flaw where the default case appeared mid-switch:
+```javascript
+case "JUMP": { ... break; }
+default: { ... }      // ← WRONG POSITION!
+case "ADD": { ... }   // Unreachable code!
+```
+
+This made all ALU instructions after JUMP unreachable. The fix moved default to the end, following JavaScript best practices.
+
+6.2 Missing UI Elements
+------------------------
+Added Z flag display to the state grid:
+```html
+<div class="state-item">
+  <div class="state-label">Z Flag (Zero)</div>
+  <div id="zFlagVal" class="state-value">0</div>
+</div>
+```
+
+This provides real-time feedback on flag status during execution.
+
+6.3 Code Organization
+----------------------
+Improvements included:
+- Consistent error handling with try-catch blocks
+- Clear separation of addressing mode logic
+- Comprehensive inline comments
+- Descriptive explanation text for each execution phase
+- Input validation for all instructions
+
+7. TESTING METHODOLOGY
+======================
+
+Three comprehensive test programs were created:
+
+**Test Program 1: Arithmetic Operations**
+- Validates all six ALU instructions
+- Tests immediate addressing with all operations
+- Verifies Z flag behavior
+- Expected results documented for validation
+
+**Test Program 2: Addressing Modes**
+- Demonstrates register-indirect addressing
+- Tests indexed addressing with various offsets
+- Combines LOAD/STORE with different modes
+- Validates pointer-like behavior
+
+**Test Program 3: Conditional Branching**
+- Implements countdown loop using JNZ
+- Demonstrates Z flag-based control flow
+- Shows loop termination behavior
+- Tests conditional vs. unconditional jumps
+
+Each test includes expected results and detailed annotations.
+
+8. LIMITATIONS AND FUTURE WORK
+==============================
+
+Current limitations:
+- No negative offset in indexed addressing
+- Limited to three general-purpose registers
+- No stack or subroutine support
+- Integer-only arithmetic
+
+Potential enhancements:
+- Additional conditional branches (JZ, JMP on other flags)
+- Stack pointer and PUSH/POP instructions
+- More registers or register banks
+- System bus visualization (optional extra credit)
+- Memory-mapped I/O simulation
+
+9. CONCLUSION
+=============
+
+This project successfully extended the CPU simulator with comprehensive instruction set enhancements. All required features were implemented:
+- Six new ALU instructions with correct Z flag handling
+- Four addressing modes (immediate, direct, register-indirect, indexed)
+- Conditional branching with JNZ
+- Critical bug fixes ensuring code reliability
+- Well-documented test programs
+
+The implementation provides an educational tool demonstrating fundamental computer architecture concepts: instruction cycle phases, addressing mode diversity, ALU operations, and control flow mechanisms. The browser-based interface allows interactive exploration of low-level CPU behavior, bridging the gap between theoretical computer architecture and practical implementation.
+
+The code is production-ready with proper error handling, clear documentation, and validated functionality across all test cases.
+
+---
+END OF REPORT

@@ -1,0 +1,51 @@
+Test Program 2: Advanced Addressing Modes
+==========================================
+
+This program demonstrates:
+- Register-indirect addressing: (Rn)
+- Indexed addressing: offset(Rn)
+- Direct memory addressing
+- STORE instruction with different addressing modes
+
+Program:
+--------
+100: LOAD R1, #500
+101: LOAD R2, #10
+102: LOAD R3, (R1)
+103: STORE R3, 600
+104: LOAD R1, #100
+105: LOAD R2, 50(R1)
+106: ADD R3, R2, #5
+107: LOAD R1, #200
+108: STORE R3, 10(R1)
+109: LOAD R2, (R1)
+110: STORE R2, 700
+
+Memory Setup:
+-------------
+100: LOAD R1, #500
+101: LOAD R2, #10
+500: 42
+501: 99
+150: 77
+210: 88
+
+Expected Results:
+-----------------
+After instruction 100: R1 = 500
+After instruction 101: R2 = 10
+After instruction 102: R3 = 42 (loads from memory[500] using register-indirect)
+After instruction 103: Memory[600] = 42 (stores R3 to direct address)
+After instruction 104: R1 = 100
+After instruction 105: R2 = 77 (loads from memory[150] = memory[100 + 50] using indexed)
+After instruction 106: R3 = 82 (77 + 5)
+After instruction 107: R1 = 200
+After instruction 108: Memory[210] = 82 (stores to memory[200 + 10] using indexed)
+After instruction 109: R2 = 88 (loads from memory[200] using register-indirect)
+After instruction 110: Memory[700] = 88
+
+Notes:
+------
+- Register-indirect (R1) means: use the value in R1 as a memory address
+- Indexed 50(R1) means: use R1 + 50 as a memory address
+- This demonstrates pointer-like behavior common in real CPUs

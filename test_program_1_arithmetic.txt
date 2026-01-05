@@ -1,0 +1,39 @@
+Test Program 1: Arithmetic Operations and Immediate Addressing
+================================================================
+
+This program demonstrates:
+- All ALU operations (ADD, SUB, MUL, DIV, AND, OR, NOT)
+- Immediate addressing mode (#value)
+- Direct memory addressing
+
+Program:
+--------
+100: LOAD R1, #15
+101: LOAD R2, #3
+102: ADD R3, R1, R2
+103: SUB R1, R3, R2
+104: MUL R2, R1, #2
+105: DIV R3, R2, #4
+106: LOAD R1, #12
+107: LOAD R2, #5
+108: AND R3, R1, R2
+109: OR R1, R3, R2
+110: NOT R2, R1
+
+Expected Results:
+-----------------
+After instruction 100: R1 = 15
+After instruction 101: R2 = 3
+After instruction 102: R3 = 18 (15 + 3)
+After instruction 103: R1 = 15 (18 - 3)
+After instruction 104: R2 = 30 (15 * 2)
+After instruction 105: R3 = 7 (30 / 4)
+After instruction 106: R1 = 12
+After instruction 107: R2 = 5
+After instruction 108: R3 = 4 (12 & 5 = 1100 & 0101 = 0100)
+After instruction 109: R1 = 5 (4 | 5 = 0100 | 0101 = 0101)
+After instruction 110: R2 = -6 (~5)
+
+Memory Setup:
+-------------
+(No additional memory needed for this test)

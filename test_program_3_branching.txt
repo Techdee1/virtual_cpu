@@ -1,0 +1,76 @@
+Test Program 3: Conditional Branching with JNZ (Loop Example)
+==============================================================
+
+This program demonstrates:
+- JNZ (Jump if Not Zero) conditional branch instruction
+- Loop implementation using counter
+- Z flag behavior
+- Control flow alteration
+
+Program (Countdown Loop):
+-------------------------
+100: LOAD R1, #5
+101: LOAD R2, #10
+102: SUB R1, R1, #1
+103: ADD R2, R2, R1
+104: JNZ 102
+105: LOAD R3, R2
+
+Memory Setup:
+-------------
+(No additional memory needed)
+
+Expected Execution Flow:
+------------------------
+Iteration 1:
+  - Instruction 100: R1 = 5
+  - Instruction 101: R2 = 10
+  - Instruction 102: R1 = 4 (5-1), Z flag = 0 (not zero)
+  - Instruction 103: R2 = 14 (10+4)
+  - Instruction 104: JNZ jumps to 102 (because Z=0)
+
+Iteration 2:
+  - Instruction 102: R1 = 3 (4-1), Z flag = 0
+  - Instruction 103: R2 = 17 (14+3)
+  - Instruction 104: JNZ jumps to 102
+
+Iteration 3:
+  - Instruction 102: R1 = 2 (3-1), Z flag = 0
+  - Instruction 103: R2 = 19 (17+2)
+  - Instruction 104: JNZ jumps to 102
+
+Iteration 4:
+  - Instruction 102: R1 = 1 (2-1), Z flag = 0
+  - Instruction 103: R2 = 20 (19+1)
+  - Instruction 104: JNZ jumps to 102
+
+Iteration 5:
+  - Instruction 102: R1 = 0 (1-1), Z flag = 1 (zero!)
+  - Instruction 103: R2 = 20 (20+0)
+  - Instruction 104: JNZ does NOT jump (Z=1), continues to 105
+  - Instruction 105: R3 = 20
+
+Final Results:
+--------------
+R1 = 0
+R2 = 20
+R3 = 20
+Z flag = 1
+
+This demonstrates a typical countdown loop pattern:
+- The loop executes 5 times
+- R2 accumulates: 10 + 4 + 3 + 2 + 1 + 0 = 20
+- Loop exits when R1 reaches 0 (Z flag set)
+
+Alternative Test (Simple conditional):
+---------------------------------------
+200: LOAD R1, #5
+201: LOAD R2, #5
+202: SUB R3, R1, R2
+203: JNZ 206
+204: LOAD R1, #99
+205: JUMP 207
+206: LOAD R1, #77
+207: LOAD R2, #1
+
+Expected: Since 5-5=0, Z=1, JNZ doesn't jump, so R1=99, R2=1

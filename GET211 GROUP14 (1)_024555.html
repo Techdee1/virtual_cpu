@@ -325,7 +325,7 @@
             Format: <code>address: OPCODE operands</code><br />
             Supported opcodes: <code>LOAD</code>, <code>ADD</code>, <code>SUB</code>, <code>DIV</code>,
             <code>MUL</code>, <code>AND</code>, <code>OR</code>, <code>NOT</code>, <code>STORE</code>,
-            <code>JUMP</code><br />
+            <code>JUMP</code>, <code>JNZ</code><br />
             Example: <code>100: LOAD R1, 500</code>
           </div>
         </div>
@@ -393,6 +393,10 @@
         <div class="state-item">
           <div class="state-label">Last ALU op</div>
           <div id="aluVal" class="state-value code">–</div>
+        </div>
+        <div class="state-item">
+          <div class="state-label">Z Flag (Zero)</div>
+          <div id="zFlagVal" class="state-value">0</div>
         </div>
         <div class="state-item">
           <div class="state-label">Current phase</div>
@@ -486,6 +490,7 @@
     const r2Val = document.getElementById("r2Val");
     const r3Val = document.getElementById("r3Val");
     const aluVal = document.getElementById("aluVal");
+    const zFlagVal = document.getElementById("zFlagVal");
     const phaseVal = document.getElementById("phaseVal");
     const statusVal = document.getElementById("statusVal");
     const explanationBox = document.getElementById("explanationBox");
@@ -688,6 +693,7 @@
       r2Val.textContent = state.registers.R2;
       r3Val.textContent = state.registers.R3;
       aluVal.textContent = state.lastALU || "–";
+      zFlagVal.textContent = state.flags && state.flags.Z ? "1" : "0";
       phaseVal.textContent = state.phase;
       setPhaseChipActive(state.phase);
     }
@@ -767,10 +773,34 @@
       }
 
       function getValue(operand) {
+        // Immediate addressing: #value
         if (operand.startsWith("#")) {
           return parseInt(operand.slice(1), 10);
         }
-        return getReg(operand);
+        // Indexed addressing: offset(Rn)
+        else if (operand.match(/^\d+\(.+\)$/)) {
+          const match = operand.match(/^(\d+)\((.+)\)$/);
+          const offset = parseInt(match[1], 10);
+          const regName = match[2];
+          const baseAddr = getReg(regName);
+          const addr = baseAddr + offset;
+          return readMemory(addr);
+        }
+        // Register-indirect addressing: (Rn)
+        else if (operand.startsWith("(") && operand.endsWith(")")) {
+          const regName = operand.slice(1, -1);
+          const addr = getReg(regName);
+          return readMemory(addr);
+        }
+        // Direct memory addressing: address
+        else if (!isNaN(parseInt(operand, 10))) {
+          const addr = parseInt(operand, 10);
+          return readMemory(addr);
+        }
+        // Register addressing: Rn
+        else {
+          return getReg(operand);
+        }
       }
 
       function setReg(name, value) {
@@ -869,10 +899,6 @@
             explanation += `JUMP: PC ← ${addr}`;
             state.lastALU = "";
             break;
-          }
-          default: {
-            explanation += `Unknown opcode ${inst.op}. CPU halts.`;
-            state.halted = true;
           }
 
           case "ADD": {
@@ -1013,8 +1039,11 @@
             break;
           }
 
-
-
+          default: {
+            explanation += `Unknown opcode ${inst.op}. CPU halts.`;
+            state.halted = true;
+            break;
+          }
         }
       } catch (err) {
         explanation += `\nError: ${err.message}\nExecution halted.`;
